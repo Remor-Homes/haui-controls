@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FullPageOS Wall-Mount Control Panel</title>
+    <style>
+        :root {
+            --ha-background: #121212;
+            --ha-surface: #1e1e1e;
+            --ha-on-surface: #e0e0e0;
+            --ha-primary: #03a9f4;
+            --ha-error: #f44336;
+            --ha-success: #4caf50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+            background-color: var(--ha-background);
+            color: var(--ha-on-surface);
+            line-height: 1.5;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: var(--ha-surface);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+        }
+        
+        .card {
+            background-color: var(--ha-surface);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--ha-primary);
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--ha-on-surface);
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--ha-primary);
+        }
+        
+        button {
+            background-color: var(--ha-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #0288d1;
+        }
+        
+        button.danger {
+            background-color: var(--ha-error);
+        }
+        
+        button.danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        button.success {
+            background-color: var(--ha-success);
+        }
+        
+        .result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 20px;
+            white-space: pre-wrap;
+        }
+        
+        .success { background-color: rgba(76, 175, 80, 0.2); color: var(--ha-success); }
+        .error { background-color: rgba(244, 67, 54, 0.2); color: var(--ha-error); }
+        
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .wifi-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 8px;
+        }
+        
+        .wifi-item {
+            padding: 10px 12px;
+            margin: 4px 0;
+            background-color: #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .wifi-item:hover {
+            background-color: #444;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 14px;
+        }
+        
+        .info-label {
+            color: #b0b0b0;
+        }
+        
+        .info-value {
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .backlight-slider {
+            width: 100%;
+            accent-color: var(--ha-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/favicon.ico" alt="Remor Homes HAUI Icon" style="width:32px; height:32px; ">
+        <h1>Home Assistant User Interface Control</h1>
+        <div class="status-bar">
+            <span id="current-ip">IP: Loading...</span>
+            <span id="current-hostname">Hostname: Loading...</span>
+            <span id="current-ssid">WiFi: Loading...</span>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- System Info & Actions -->
+        <div class="card">
+            <h2>System</h2>
+            <div class="info-grid">
+                <div><span class="info-label">Current IP:</span> <span id="ip-display" class="info-value"></span></div>
+                <div><span class="info-label">Hostname:</span> <span id="hostname-display" class="info-value"></span></div>
+                <div><span class="info-label">Main URL:</span> <span id="main-url-display" class="info-value"></span></div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button onclick="rebootSystem()">Reboot System</button>
+                <button onclick="resetMainURL()">Reset to Wizard</button>
+                <button onclick="cleanupChromiumLocks()">Clean Chromium Locks</button>
+            </div>
+        </div>
+
+        <!-- WiFi Management -->
+        <div class="card">
+            <h2>WiFi Configuration</h2>
+            
+            <div class="form-group">
+                <button onclick="scanWifi()" style="width:100%; margin-bottom:12px;">Scan Available Networks</button>
+                <div id="wifi-list" class="wifi-list"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Selected SSID</label>
+                <input type="text" id="ssid-input" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>WiFi Password</label>
+                <input type="password" id="wifi-password" placeholder="Password (optional for open networks)">
+            </div>
+            
+            <button onclick="saveWifi()">Save & Apply WiFi Settings</button>
+            <button onclick="restartWifi()" style="margin-top:8px; background:#ff9800;">Restart WiFi Interface</button>
+            
+            <div id="wifi-result" class="result"></div>
+        </div>
+
+        <!-- Hostname -->
+        <div class="card">
+            <h2>Hostname</h2>
+            <div class="form-group">
+                <label>Current Hostname</label>
+                <input type="text" id="current-hostname-input" readonly>
+            </div>
+            <div class="form-group">
+                <label>New Hostname</label>
+                <input type="text" id="new-hostname" placeholder="e.g. wallpanel-livingroom">
+            </div>
+            <button onclick="setHostname()">Change Hostname (requires reboot)</button>
+            <div id="hostname-result" class="result"></div>
+        </div>
+
+        <!-- Main URL -->
+        <div class="card">
+            <h2>Home Assistant URL</h2>
+            <div class="form-group">
+                <label>Current Main URL</label>
+                <input type="text" id="current-main-url" readonly>
+            </div>
+            <div class="form-group">
+                <label>New Dashboard URL</label>
+                <input type="text" id="new-main-url" placeholder="http://homeassistant.local:8123/lovelace">
+            </div>
+            <button onclick="setMainURL()">Set Main URL</button>
+            <div id="mainurl-result" class="result"></div>
+        </div>
+
+        <!-- MQTT Configuration -->
+        <div class="card">
+            <h2>MQTT Configuration</h2>
+            
+            <div class="form-group">
+                <label>MQTT Server (IP:port)</label>
+                <input type="text" id="mqtt-server" placeholder="192.168.1.50:8883">
+            </div>
+            
+            <button onclick="saveMQTTServer()">Save MQTT Server</button>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+                <h3 style="margin-bottom:12px; font-size:16px;">MQTT Credentials</h3>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="mqtt-username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="mqtt-password">
+                </div>
+                <button onclick="setMQTTCredentials()">Save Credentials</button>
+            </div>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+                <h3 style="margin-bottom:12px; font-size:16px;">Upload CA Certificate</h3>
+                <input type="file" id="cert-file" accept=".crt,.pem">
+                <button onclick="uploadCert()" style="margin-top:8px;">Upload Certificate</button>
+            </div>
+            
+            <div id="mqtt-result" class="result"></div>
+        </div>
+
+        <!-- Backlight Control -->
+        <div class="card">
+            <h2>Backlight Control</h2>
+            
+            <div class="form-group">
+                <label>Backlight Level (0-255)</label>
+                <input type="range" id="backlight-slider" min="0" max="255" value="128" class="backlight-slider" oninput="updateBacklightValue(this.value)">
+                <div style="text-align:center; margin-top:8px; font-size:18px;" id="backlight-value">128</div>
+            </div>
+            
+            <button onclick="setBacklightLevel()">Apply Backlight Level</button>
+            
+            <div style="margin-top:20px;">
+                <button onclick="checkBacklightService()">Check Service Status</button>
+                <button onclick="enableBacklightService()" style="background:#4caf50;">Enable & Start Service</button>
+            </div>
+            
+            <div id="backlight-result" class="result"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // Helper to show result
+        function showResult(elementId, message, isSuccess = true) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `result ${isSuccess ? 'success' : 'error'}`;
+            setTimeout(() => { el.textContent = ''; }, 8000);
+        }
+
+        // Load initial data
+        async function loadSystemInfo() {
+            // IP
+            try {
+                const ipRes = await fetch(`${API_BASE}/my_ip`);
+                const ipData = await ipRes.json();
+                document.getElementById('current-ip').textContent = `IP: ${ipData.ip || 'Unknown'}`;
+                document.getElementById('ip-display').textContent = ipData.ip || 'Unknown';
+            } catch(e) {}
+            
+            // Hostname
+            try {
+                const hnRes = await fetch(`${API_BASE}/get-hostname`);
+                const hnData = await hnRes.json();
+                const hn = hnData.hostname || 'Unknown';
+                document.getElementById('current-hostname').textContent = `Hostname: ${hn}`;
+                document.getElementById('hostname-display').textContent = hn;
+                document.getElementById('current-hostname-input').value = hn;
+            } catch(e) {}
+            
+            // Main URL
+            try {
+                const urlRes = await fetch(`${API_BASE}/get-main-url`);
+                const urlData = await urlRes.json();
+                document.getElementById('main-url-display').textContent = urlData.main_url || 'Unknown';
+                document.getElementById('current-main-url').value = urlData.main_url || '';
+            } catch(e) {}
+            
+            // WiFi status
+            try {
+                const wifiRes = await fetch(`${API_BASE}/check-wifi-status`);
+                const wifiData = await wifiRes.json();
+                document.getElementById('current-ssid').textContent = `WiFi: ${wifiData.current_connected_ssid || 'Not connected'}`;
+            } catch(e) {}
+        }
+
+        // WiFi Scan
+        async function scanWifi() {
+            const list = document.getElementById('wifi-list');
+            list.innerHTML = '<div style="padding:12px; color:#888;">Scanning...</div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/scan-wifi`);
+                const data = await res.json();
+                
+                if (data.status) {
+                    list.innerHTML = '';
+                    data.ssids.forEach(ssid => {
+                        const div = document.createElement('div');
+                        div.className = 'wifi-item';
+                        div.textContent = ssid;
+                        div.onclick = () => {
+                            document.getElementById('ssid-input').value = ssid;
+                        };
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = `<div style="padding:12px; color:#f44336;">${data.message}</div>`;
+                }
+            } catch(e) {
+                list.innerHTML = '<div style="padding:12px; color:#f44336;">Scan failed</div>';
+            }
+        }
+
+        async function saveWifi() {
+            const ssid = document.getElementById('ssid-input').value.trim();
+            const password = document.getElementById('wifi-password').value.trim();
+            
+            if (!ssid) {
+                showResult('wifi-result', 'Please select or enter an SSID', false);
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/save-wifi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ssid, password })
+                });
+                const data = await res.json();
+                showResult('wifi-result', data.message || 'WiFi settings applied', data.status);
+            } catch(e) {
+                showResult('wifi-result', 'Failed to save WiFi settings', false);
+            }
+        }
+
+        async function restartWifi() {
+            try {
+                const res = await fetch(`${API_BASE}/restart-wifi`, { method: 'POST' });
+                const data = await res.json();
+                showResult('wifi-result', data.message || 'WiFi restarted', data.status);
+            } catch(e) {
+                showResult('wifi-result', 'Failed to restart WiFi', false);
+            }
+        }
+
+        // Reboot
+        async function rebootSystem() {
+            if (!confirm('Reboot the FullPageOS device?')) return;
+            try {
+                await fetch(`${API_BASE}/reboot`);
+                showResult('wifi-result', 'Reboot command sent. Device will restart shortly.', true);
+            } catch(e) {}
+        }
+
+        // Hostname
+        async function setHostname() {
+            const newHn = document.getElementById('new-hostname').value.trim();
+            if (!newHn) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/set-hostname`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hostname: newHn })
+                });
+                const data = await res.json();
+                showResult('hostname-result', data.message, data.status);
+            } catch(e) {
+                showResult('hostname-result', 'Failed to change hostname', false);
+            }
+        }
+
+        // Main URL
+        async function setMainURL() {
+            const url = document.getElementById('new-main-url').value.trim();
+            if (!url) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/set-main-url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ main_url: url })
+                });
+                const data = await res.json();
+                showResult('mainurl-result', data.message, data.status);
+            } catch(e) {
+                showResult('mainurl-result', 'Failed to set URL', false);
+            }
+        }
+
+        async function resetMainURL() {
+            if (!confirm('Reset main URL to wizard page?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/reset-main-url`);
+                const data = await res.json();
+                showResult('mainurl-result', data.message, data.status);
+            } catch(e) {}
+        }
+
+        // MQTT
+        async function saveMQTTServer() {
+            const server = document.getElementById('mqtt-server').value.trim();
+            if (!server) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/save-mqtt-server`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mqtt_server: server })
+                });
+                const data = await res.json();
+                showResult('mqtt-result', data.message, data.status);
+            } catch(e) {}
+        }
+
+        async function setMQTTCredentials() {
+            const username = document.getElementById('mqtt-username').value.trim();
+            const password = document.getElementById('mqtt-password').value.trim();
+            
+            if (!username || !password) {
+                showResult('mqtt-result', 'Username and password required', false);
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/set-mqtt-credentials`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mqtt_username: username, mqtt_password: password })
+                });
+                const data = await res.json();
+                showResult('mqtt-result', data.message, data.status);
+            } catch(e) {}
+        }
+
+        async function uploadCert() {
+            const fileInput = document.getElementById('cert-file');
+            if (!fileInput.files.length) {
+                showResult('mqtt-result', 'Please select a certificate file', false);
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('cert_file', fileInput.files[0]);
+            
+            try {
+                const res = await fetch(`${API_BASE}/set-mqtt-cert`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                showResult('mqtt-result', data.message, data.status);
+            } catch(e) {
+                showResult('mqtt-result', 'Certificate upload failed', false);
+            }
+        }
+
+        // Backlight
+        function updateBacklightValue(val) {
+            document.getElementById('backlight-value').textContent = val;
+        }
+
+        async function setBacklightLevel() {
+            const level = parseInt(document.getElementById('backlight-slider').value);
+            try {
+                const res = await fetch(`${API_BASE}/set-backlight-level`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level })
+                });
+                const data = await res.json();
+                showResult('backlight-result', data.message || `Backlight set to ${level}`, data.status);
+            } catch(e) {}
+        }
+
+        async function checkBacklightService() {
+            try {
+                const res = await fetch(`${API_BASE}/check-backlight-service`);
+                const data = await res.json();
+                showResult('backlight-result', `Backlight service: ${data.stdout || data}`, true);
+            } catch(e) {}
+        }
+
+        async function enableBacklightService() {
+            try {
+                const res = await fetch(`${API_BASE}/enable-backlight-service`, { method: 'POST' });
+                const data = await res.json();
+                showResult('backlight-result', data.message, data.status);
+            } catch(e) {}
+        }
+
+        async function cleanupChromiumLocks() {
+            try {
+                const res = await fetch(`${API_BASE}/cleanup-chromium-locks`, { method: 'POST' });
+                const data = await res.json();
+                showResult('wifi-result', data.message, data.status);
+            } catch(e) {}
+        }
+
+        // Initialize
+        window.onload = () => {
+            loadSystemInfo();
+            
+            // Refresh WiFi status every 30s
+            setInterval(() => {
+                fetch(`${API_BASE}/check-wifi-status`)
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('current-ssid').textContent = `WiFi: ${data.current_connected_ssid || 'Not connected'}`;
+                    });
+            }, 30000);
+        };
+    </script>
+</body>
+</html>
