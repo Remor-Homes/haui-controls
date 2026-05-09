@@ -5,36 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HAUI Setup</title>
     <style>
-        .step-header { display: flex; align-items: center; gap: 12px; flex-direction: row; justify-content: space-between; }
-        .qr-link { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin-left: 8px; margin-right: 0; }
-        .qr-link img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; border: 1.5px solid #03a9f4; background: #fff; }
-        body { margin: 0; padding: 0; background: #1a1a1a; color: #e0e0e0; font-family: 'Roboto', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { background: #202020; border-radius: 13px; padding: 25px; width: 100%; max-width: 520px; box-shadow: 0 6px 26px rgba(0,0,0,0.6); }
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        .qr-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin-left: 8px;
+            margin-right: 0;
+        }
+        .qr-link img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1.5px solid #03a9f4;
+            background: #fff;
+        }
+        /* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap'); */
+        body {
+            margin: 0; padding: 0; background: #1a1a1a; color: #e0e0e0;
+            font-family: 'Roboto', sans-serif; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card {
+            background: #202020; border-radius: 13px; padding: 25px;
+            width: 100%; max-width: 520px; box-shadow: 0 6px 26px rgba(0,0,0,0.6);
+        }
         h1 { text-align: center; color: #03a9f4; margin-bottom: 6px; font-size: 2.0em; }
         .subtitle { text-align: center; color: #888; margin-bottom: 25px; font-size: 1.0em; }
         .step { display: none; }
         .step.active { display: block; }
         label { display: block; margin: 14px 0 5px; font-weight: 500; color: #ccc; font-size: 0.96em; }
-        input, select, button { width: 95%; padding: 11px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #eee; font-size: 12.8px; }
+        input, select, button {
+            width: 95%; padding: 11px; border-radius: 6px;
+            border: 1px solid #444; background: #2a2a2a; color: #eee; font-size: 12.8px;
+        }
         input:focus, select:focus { border-color: #03a9f4; outline: none; }
-        button { background: #03a9f4; color: white; border: none; font-weight: 400; cursor: pointer; margin-top: 14px; font-size: 0.9em; }
+        button { background: #03a9f4; color: white; border: none; font-weight: 400; cursor: pointer; margin-top: 14px;
+        font-size: 0.9em; }
         button:hover { background: #0288d1; }
         .nav { display: flex; gap: 9.6px; }
         .nav button { flex: 1; }
         .status { margin-top: 16px; padding: 11px; border-radius: 6px; text-align: center; font-weight: 500; font-size:0.96em; }
         .success { background: #1b5e20; color: #a5d6a7; }
         .error { background: #b71c1c; color: #ff8a80; }
-        #keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 1.6px solid #03a9f4; padding: 6.4px; display: none; flex-wrap: wrap; justify-content: center; gap: 3.2px; z-index: 1000; }
-        .key { background: #333; color: #eee; padding: 8px 8px; margin: 1.2px; border-radius: 4px; font-size: 14px; min-width: 28px; text-align: center; cursor: pointer; user-select: none; flex: 0 0 auto; }
+        /* Virtual Keyboard */
+        #keyboard {
+            position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a;
+            border-top: 1.6px solid #03a9f4; padding: 6.4px; display: none; flex-wrap: wrap;
+            justify-content: center; gap: 3.2px; z-index: 1000;
+        }
+        .key {
+            background: #333; color: #eee; padding: 8px 8px; margin: 1.2px;
+            border-radius: 4px; font-size: 14px; min-width: 28px; text-align: center;
+            cursor: pointer; user-select: none;
+            flex: 0 0 auto;
+        }
         .key.wide { min-width: 80px; }
         .key:active { background: #03a9f4; color: white; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #wifi-scan-modal { display: none; position: fixed; z-index: 4000; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.65); align-items: center; justify-content: center; }
-        #wifi-scan-content { background: #222; padding: 24px; border-radius: 12px; width: 90vw; max-width: 420px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); }
-        .wifi-scan-item { padding: 14px 16px; background: #2a2a2a; margin: 6px 0; border-radius: 8px; cursor: pointer; font-size: 15px; }
-        .wifi-scan-item:hover { background: #03a9f4; color: white; }
-        .wifi-icon { cursor: pointer; padding: 8px; margin-left: 6px; border-radius: 6px; }
-        .wifi-icon:hover { background: rgba(3,169,244,0.2); }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* NEW: WiFi Scan Modal & Icon */
+        #wifi-scan-modal {
+            display: none;
+            position: fixed;
+            z-index: 4000;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.65);
+            align-items: center;
+            justify-content: center;
+        }
+        #wifi-scan-content {
+            background: #222;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90vw;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+        }
+        .wifi-scan-item {
+            padding: 14px 16px;
+            background: #2a2a2a;
+            margin: 6px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .wifi-scan-item:hover {
+            background: #03a9f4;
+            color: white;
+        }
+        .wifi-icon {
+            cursor: pointer;
+            padding: 8px;
+            margin-left: 6px;
+            border-radius: 6px;
+        }
+        .wifi-icon:hover {
+            background: rgba(3,169,244,0.2);
+        }
     </style>
 </head>
 <body>
@@ -56,15 +137,17 @@
     <button onclick="showStep(6);closeMenu();" style="background:#23272b;color:#fff;border:none;padding:10px 18px;margin:0 16px 0 16px;border-radius:6px;font-size:1em;text-align:left;">MQTT Auth</button>
     <button onclick="closeMenu();reboot();" style="background:#23272b;color:#fff;border:none;padding:10px 18px;margin:0 16px 0 16px;border-radius:6px;font-size:1em;text-align:left;">Reboot</button>
 </div>
-
 <div class="card">
+    <!-- Spinner -->
+    <div id="welcome-spinner" style="display:flex;justify-content:center;align-items:center;margin-bottom:10px;">
+    <div style="width:32px;height:32px;border:4px solid #03a9f4;border-top:4px solid #222;border-radius:50%;animation:spin 1s linear infinite;"></div>
+    </div>
     <!-- Step 1: Welcome -->
     <div id="step1" class="step">
         <h1>Home Assistant User Interface</h1>
         <p style="text-align: center;margin-top:24px;font-size:1.0em;line-height:1.5;">I'll help you to setup your Home Assistant screen.</p>
     </div>
-
-    <!-- Step 2: WiFi (Continue button only enabled on successful connection) -->
+    <!-- Step 2: WiFi -->
     <div id="step2" class="step">
         <div class="step-header">
             <h2>WiFi Network</h2>
@@ -81,7 +164,10 @@
                 <label for="ssid">SSID</label>
                 <div style="display:flex; align-items:center;">
                     <input type="text" id="ssid" placeholder="HomeWiFi" onfocus="showKeyboard(this)" style="flex:1;">
-                    <span class="wifi-icon" onclick="scanAndShowWifiModal()" title="Scan available networks">📡</span>
+                    <!-- WiFi Scan Icon -->
+                    <span class="wifi-icon" onclick="scanAndShowWifiModal()" title="Scan available networks">
+                        📡
+                    </span>
                 </div>
             </div>
             <div style="flex:1; min-width: 0;">
@@ -95,7 +181,6 @@
             <button id="wifi-continue-btn" onclick="next(3)" disabled>Continue</button>
         </div>
     </div>
-
     <!-- Step 3: Hostname -->
     <div id="step3" class="step">
         <div class="step-header">
@@ -112,7 +197,6 @@
             <button onclick="next(4)">Continue</button>
         </div>
     </div>
-
     <!-- Step 4: Main URL -->
     <div id="step4" class="step">
         <div class="step-header">
@@ -129,8 +213,7 @@
             <button onclick="next(5)">Continue</button>
         </div>
     </div>
-
-    <!-- Step 5: MQTT Server -->
+    <!-- Step 5: MQTT Server/Auth -->
     <div id="step5" class="step">
         <div class="step-header">
             <h2>MQTT Connection</h2>
@@ -157,7 +240,6 @@
             <button onclick="next(6)">Continue</button>
         </div>
     </div>
-
     <!-- Step 6: MQTT Auth -->
     <div id="step6" class="step">
         <div class="step-header">
@@ -188,24 +270,23 @@
             <button id="step6-continue-btn" onclick="next(7)">Continue</button>
         </div>
     </div>
-
-    <!-- NEW FINAL STEP 7: Wizard Complete -->
+    <!-- Step 7: Enable Backlight Service -->
     <div id="step7" class="step">
         <div class="step-header">
-            <h2 style="color:#4caf50;">✓ Wizard Complete</h2>
+            <h2>All Set!</h2>
+            <button class="qr-link" type="button" onclick="showQrModal()" title="Show QR code for manual">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="7" y="7" width="3" height="3" fill="#03a9f4"/></svg>
+            </button>
         </div>
-        <p style="text-align:center; font-size:1.35em; line-height:1.7; margin:50px 20px 40px 20px;">
-            The Wizard is now complete.<br><br>
-            Press reboot to go to your defined URL.
-        </p>
+        <div id="backlight-status-container" style="margin-bottom: 16px;">
+            <span id="backlight-status-label" style="font-weight: 500;">Your setup is complated. Press the reboot button below to start on your selected home screen URL. </span>
+        </div>
         <div class="nav">
             <button onclick="prev(6)">Back</button>
-            <button onclick="reboot()" style="background:#4caf50; font-weight:500;">Reboot Now</button>
+            <button id="reboot-btn" onclick="reboot()" disabled>Reboot</button>
         </div>
     </div>
-
     <div id="status" class="status" style="display:none;"></div>
-
     <!-- QR Code Modal -->
     <div id="qr-modal" style="display:none;position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;">
         <div style="background:#222;padding:32px 24px;border-radius:12px;max-width:340px;width:90vw;box-shadow:0 4px 24px #000a;text-align:center;position:relative;">
@@ -214,8 +295,7 @@
             <img src="haui-setup.jpg" alt="QR code" style="width:180px;height:180px;object-fit:contain;border-radius:8px;border:2px solid #03a9f4;background:#fff;">
         </div>
     </div>
-
-    <!-- WiFi Confirmation Modal -->
+    <!-- Confirmation Modal for Save & Reboot on WiFi -->
     <div id="wifi-confirm-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;">
         <div style="background:#222;padding:32px 24px;border-radius:12px;max-width:340px;width:90vw;box-shadow:0 4px 24px #000a;text-align:center;">
             <h3 style="color:#03a9f4;margin-bottom:18px;">Save WiFi SSID and Password?</h3>
@@ -227,7 +307,7 @@
         </div>
     </div>
 
-    <!-- WiFi Scan Modal -->
+    <!-- NEW: WiFi Networks Scan Modal -->
     <div id="wifi-scan-modal">
         <div id="wifi-scan-content">
             <h3 style="color:#03a9f4;margin-bottom:16px;">Available WiFi Networks</h3>
@@ -236,54 +316,341 @@
         </div>
     </div>
 </div>
-
 <!-- Virtual Keyboard -->
 <div id="keyboard"></div>
 
 <script>
-// ===== Menu, QR, Keyboard, WiFi Scan (unchanged) =====
-function showQrModal() { document.getElementById('qr-modal').style.display = 'flex'; }
-function closeQrModal() { document.getElementById('qr-modal').style.display = 'none'; }
-window.addEventListener('click', function(e) { const modal = document.getElementById('qr-modal'); if (modal.style.display === 'flex' && e.target === modal) closeQrModal(); });
-
+// ===== Menu logic =====
+// ===== QR Modal logic =====
+function showQrModal() {
+    document.getElementById('qr-modal').style.display = 'flex';
+}
+function closeQrModal() {
+    document.getElementById('qr-modal').style.display = 'none';
+}
+// Close modal when clicking outside the modal content
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('qr-modal');
+    if (modal.style.display === 'flex' && e.target === modal) {
+        closeQrModal();
+    }
+});
 const menuBtn = document.getElementById('menu-btn');
 const sideMenu = document.getElementById('side-menu');
 let menuOpen = false;
-function openMenu() { sideMenu.style.transform = 'translateX(0)'; menuOpen = true; }
-function closeMenu() { sideMenu.style.transform = 'translateX(-200px)'; menuOpen = false; }
-menuBtn.addEventListener('click', function(e) { e.stopPropagation(); if (menuOpen) closeMenu(); else openMenu(); });
-document.addEventListener('click', function(e) { if (menuOpen && !sideMenu.contains(e.target) && e.target !== menuBtn) closeMenu(); });
+function openMenu() {
+    sideMenu.style.transform = 'translateX(0)';
+    menuOpen = true;
+}
+function closeMenu() {
+    sideMenu.style.transform = 'translateX(-200px)';
+    menuOpen = false;
+}
+menuBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (menuOpen) closeMenu(); else openMenu();
+});
+// Hide menu when clicking outside
+document.addEventListener('click', function(e) {
+    if (menuOpen && !sideMenu.contains(e.target) && e.target !== menuBtn) closeMenu();
+});
 
-// Virtual Keyboard (unchanged - abbreviated for brevity)
-const mainKeys = ['1','2','3','4','5','6','7','8','9','0','-','=','⌫','q','w','e','r','t','y','u','i','o','p','[',']','\\','a','s','d','f','g','h','j','k','l',';','\'','Symbols','Shift'];
-const symbolKeys = ['~','!','@','#','$','%','^','&','*','(',')','_','⌫','`','|','•','√','π','÷','×','¶','∆','{','}','[',']','<','>','≠','±',';','"','\\','/','\?','¿','¡','§','¢','ABC','Space','Clear'];
-let symbolsPage = false, currentInput = null, shift = false;
-function createKeyboard() { /* ... full keyboard code unchanged ... */ }
-function handleKey(key) { /* ... full keyboard logic unchanged ... */ }
-function showKeyboard(input) { currentInput = input; }
-function hideKeyboard() { document.getElementById('keyboard').style.display = 'none'; currentInput = null; symbolsPage = false; }
-document.addEventListener('click', (e) => { if (!e.target.closest('input') && !e.target.closest('#keyboard')) hideKeyboard(); });
+// ==================== Virtual Keyboard ====================
+const mainKeys = [
+    // Row 1
+    '1','2','3','4','5','6','7','8','9','0','-','=','⌫',
+    // Row 2
+    'q','w','e','r','t','y','u','i','o','p','[',']','\\',
+    // Row 3 (includes special keys at the end)
+    'a','s','d','f','g','h','j','k','l',';','\'','Symbols','Shift',
+];
+const symbolKeys = [
+    // Row 1
+    '~','!','@','#','$','%','^','&','*','(',')','_','⌫',
+    // Row 2
+    '`','|','•','√','π','÷','×','¶','∆','{','}','[',']',
+    // Row 3
+    '<','>','≠','±',';','"','\\','/','\?','¿','¡','§','¢',
+    // Row 4
+    'ABC','Space','Clear'
+];
+let symbolsPage = false;
+let currentInput = null;
+let shift = false;
+function createKeyboard() {
+    const kb = document.getElementById('keyboard');
+    kb.innerHTML = '';
+    const keys = symbolsPage ? symbolKeys : mainKeys;
+    if (symbolsPage) {
+        for (let row = 0; row < 4; row++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'kb-row';
+            rowDiv.style.display = 'flex';
+            rowDiv.style.justifyContent = 'center';
+            rowDiv.style.marginBottom = '2px';
+            for (let col = 0; col < 13; col++) {
+                const idx = row * 13 + col;
+                if (idx >= keys.length) break;
+                const k = keys[idx];
+                const div = document.createElement('div');
+                div.className = 'key';
+                let displayKey = k;
+                if (k === 'Space') { div.classList.add('wide'); div.textContent = ' '; }
+                else div.textContent = displayKey;
+                div.onclick = () => handleKey(k);
+                rowDiv.appendChild(div);
+            }
+            kb.appendChild(rowDiv);
+        }
+        return;
+    }
+    for (let row = 0; row < 3; row++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'kb-row';
+        rowDiv.style.display = 'flex';
+        rowDiv.style.justifyContent = 'center';
+        rowDiv.style.marginBottom = '2px';
+        for (let col = 0; col < 13; col++) {
+            const idx = row * 13 + col;
+            const k = keys[idx];
+            const div = document.createElement('div');
+            div.className = 'key';
+            let displayKey = k;
+            if (shift && /^[a-z]$/.test(k)) {
+                displayKey = k.toUpperCase();
+            } else if (k === 'Shift' && shift) {
+                div.style.background = '#0288d1';
+            }
+            if (k === 'Space') { div.classList.add('wide'); div.textContent = ' '; }
+            else div.textContent = displayKey;
+            div.onclick = () => handleKey(k);
+            rowDiv.appendChild(div);
+        }
+        kb.appendChild(rowDiv);
+    }
+    const specialKeys = ['z','x','c','v','b','n','m',',','.','@','/','Space','Clear'];
+    const specialRow = document.createElement('div');
+    specialRow.className = 'kb-row';
+    specialRow.style.display = 'flex';
+    specialRow.style.justifyContent = 'center';
+    specialRow.style.marginBottom = '2px';
+    specialKeys.forEach(k => {
+        const div = document.createElement('div');
+        div.className = 'key';
+        let displayKey = k;
+        if (shift && /^[a-z]$/.test(k)) {
+            displayKey = k.toUpperCase();
+        }
+        if (k === 'Space') { div.classList.add('wide'); div.textContent = ' '; }
+        else div.textContent = displayKey;
+        div.onclick = () => handleKey(k);
+        specialRow.appendChild(div);
+    });
+    kb.appendChild(specialRow);
+}
+function handleKey(key) {
+    if (!currentInput) return;
+    if (key === '⌫') {
+        currentInput.value = currentInput.value.slice(0, -1);
+    } else if (key === 'Clear') {
+        currentInput.value = '';
+    } else if (key === 'Space') {
+        currentInput.value += ' ';
+    } else if (key === 'Shift') {
+        shift = !shift;
+        if (currentInput) currentInput.focus();
+        createKeyboard();
+    } else if (key === 'Symbols') {
+        symbolsPage = true;
+        createKeyboard();
+    } else if (key === 'ABC') {
+        symbolsPage = false;
+        createKeyboard();
+    } else {
+        if (!symbolsPage && shift && /^[a-z]$/.test(key)) {
+            currentInput.value += key.toUpperCase();
+        } else {
+            currentInput.value += key;
+        }
+    }
+}
+function showKeyboard(input) {
+    currentInput = input;
+    // document.getElementById('keyboard').style.display = 'flex';
+    // createKeyboard();
+}
+function hideKeyboard() {
+    document.getElementById('keyboard').style.display = 'none';
+    currentInput = null;
+    symbolsPage = false;
+}
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('input') && !e.target.closest('#keyboard')) hideKeyboard();
+});
 createKeyboard();
-document.getElementById('keyboard').addEventListener('click', function(e) { e.stopPropagation(); });
+document.getElementById('keyboard').addEventListener('click', function(e) {
+    e.stopPropagation();
+});
 
-// WiFi Scan Modal (unchanged)
-async function scanAndShowWifiModal() { /* ... unchanged ... */ }
-function closeWifiScanModal() { document.getElementById('wifi-scan-modal').style.display = 'none'; }
+// ==================== NEW: WiFi Scan Modal Functions ====================
+async function scanAndShowWifiModal() {
+    const modal = document.getElementById('wifi-scan-modal');
+    const listContainer = document.getElementById('wifi-scan-list');
+    listContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">Scanning for networks...</div>';
+    modal.style.display = 'flex';
 
-// Navigation
+    try {
+        const res = await fetch('/api/scan-wifi');
+        const data = await res.json();
+
+        listContainer.innerHTML = '';
+
+        if (data.status && data.ssids && data.ssids.length > 0) {
+            data.ssids.forEach(ssid => {
+                const item = document.createElement('div');
+                item.className = 'wifi-scan-item';
+                item.textContent = ssid;
+                item.onclick = () => {
+                    document.getElementById('ssid').value = ssid;
+                    closeWifiScanModal();
+                };
+                listContainer.appendChild(item);
+            });
+        } else {
+            listContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#ff8a80;">No networks found or scan failed.</div>';
+        }
+    } catch (e) {
+        listContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#ff8a80;">Failed to scan WiFi networks.</div>';
+    }
+}
+
+function closeWifiScanModal() {
+    document.getElementById('wifi-scan-modal').style.display = 'none';
+}
+
+// ==================== Navigation ====================
 let currentStep = 1;
 async function showStep(n) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + n).classList.add('active');
     currentStep = n;
-
-    if (n === 3) { /* hostname fetch logic unchanged */ }
-    if (n === 4) { /* main url fetch logic unchanged */ }
-    if (n === 6) { toggleAuth(); }
-    // NO backlight check anymore
+    if (n === 3) {
+        document.getElementById('welcome-spinner').style.display = 'flex';
+        try {
+            const res = await fetch('/api/get-hostname');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.hostname) {
+                    document.getElementById('hostname').value = data.hostname;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch hostname:', e);
+        }
+        document.getElementById('welcome-spinner').style.display = 'none';
+    }
+    if (n === 4) {
+        document.getElementById('welcome-spinner').style.display = 'flex';
+        try {
+            const res = await fetch('/api/get-main-url');
+            if (res.status) {
+                const data = await res.json();
+                if (data.main_url) {
+                    document.getElementById('main_url').value = data.main_url;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch main URL:', e);
+        }
+        document.getElementById('welcome-spinner').style.display = 'none';
+    }
+    if (n === 6) {
+        toggleAuth();
+    }
+    if (n === 7) {
+        checkBacklightServiceStatus();
+    }
 }
-
-// WiFi Continue button is now strictly controlled
+// Enable Backlight Service logic
+async function checkBacklightServiceStatus() {
+    const statusValue = document.getElementById('backlight-status-value');
+    const enableBtn = document.getElementById('enable-backlight-btn');
+    const rebootBtn = document.getElementById('reboot-btn');
+    statusValue.textContent = 'Checking...';
+    statusValue.style.color = '#ccc';
+    enableBtn.disabled = true;
+    rebootBtn.disabled = true;
+    try {
+        const res = await fetch('/api/check-backlight-service');
+        const data = await res.json();
+        if (data.stdout && data.stdout.trim() === 'active') {
+            statusValue.textContent = 'Running';
+            statusValue.style.color = '#4caf50';
+            enableBtn.disabled = true;
+            rebootBtn.disabled = false;
+        } else {
+            statusValue.textContent = 'Not Running';
+            statusValue.style.color = '#ff8a80';
+            enableBtn.disabled = false;
+            rebootBtn.disabled = true;
+        }
+    } catch (e) {
+        statusValue.textContent = 'Unknown';
+        statusValue.style.color = '#ccc';
+        enableBtn.disabled = false;
+        rebootBtn.disabled = true;
+    }
+}
+async function enableBacklightService() {
+    const statusValue = document.getElementById('backlight-status-value');
+    const enableBtn = document.getElementById('enable-backlight-btn');
+    const rebootBtn = document.getElementById('reboot-btn');
+    enableBtn.disabled = true;
+    statusValue.textContent = 'Enabling...';
+    statusValue.style.color = '#03a9f4';
+    try {
+        const res = await fetch('/api/enable-backlight-service', {method: 'POST'});
+        const data = await res.json();
+        if (data.status) {
+            statusValue.textContent = 'Running';
+            statusValue.style.color = '#4caf50';
+            rebootBtn.disabled = false;
+            showStatus('Backlight service enabled!', 'status success');
+        } else {
+            statusValue.textContent = 'Failed to enable';
+            statusValue.style.color = '#ff8a80';
+            enableBtn.disabled = false;
+            rebootBtn.disabled = true;
+            showStatus(data.message || 'Failed to enable service.', 'status error');
+        }
+    } catch (e) {
+        statusValue.textContent = 'Error';
+        statusValue.style.color = '#ff8a80';
+        enableBtn.disabled = false;
+        rebootBtn.disabled = true;
+        showStatus('Error enabling service.', 'status error');
+    }
+}
+function next(n) { showStep(n); }
+function prev(n) { showStep(n); }
+// Modal logic for WiFi Save & Reboot
+function showWifiConfirmModal() {
+    document.getElementById('wifi-confirm-modal').style.display = 'flex';
+}
+function closeWifiConfirmModal() {
+    document.getElementById('wifi-confirm-modal').style.display = 'none';
+}
+function confirmWifiSave() {
+    closeWifiConfirmModal();
+    save_wifi();
+}
+// Toggle MQTT auth fields
+function toggleAuth() {
+    const isCert = document.getElementById('mqtt_auth').value === 'cert';
+    document.getElementById('pass_fields').style.display = isCert ? 'none' : 'block';
+    document.getElementById('cert_fields').style.display = isCert ? 'block' : 'none';
+}
+// Check if WiFi was already configured
 async function checkWifiConfigured() {
     try {
         const res = await fetch('/api/check-wifi-status');
@@ -292,48 +659,214 @@ async function checkWifiConfigured() {
         const ip_data = await my_ip.json();
         const statusValue = document.getElementById('wifi-status-value');
         const continueBtn = document.getElementById('wifi-continue-btn');
-
         if (data.connected === true) {
             statusValue.textContent = 'Connected to ' + (data.current_connected_ssid) + (ip_data.ip ? ` (IP: ${ip_data.ip})` : '') + '. You can continue this setup in a browser at http://' + (ip_data.ip || 'device_ip') + '/haui-wizard.';
             statusValue.style.color = '#4caf50';
-            continueBtn.disabled = false;
-        } else {
+            if (continueBtn) continueBtn.disabled = false;
+        } else if (data.connected === false) {
             statusValue.textContent = 'Not Connected.';
             statusValue.style.color = '#ff8a80';
-            continueBtn.disabled = true;
+            if (continueBtn) continueBtn.disabled = true;
+        } else {
+            statusValue.textContent = 'Unknown.';
+            statusValue.style.color = '#ccc';
+            if (continueBtn) continueBtn.disabled = true;
         }
     } catch(e) {
-        document.getElementById('wifi-status-value').textContent = 'Unknown';
-        document.getElementById('wifi-status-value').style.color = '#ccc';
-        document.getElementById('wifi-continue-btn').disabled = true;
+        const statusValue = document.getElementById('wifi-status-value');
+        statusValue.textContent = 'Unknown';
+        statusValue.style.color = '#ccc';
     }
 }
-
-// All other functions (save_hostname, save_main_url, save_mqtt_..., reload_wifi, save_wifi, reboot, toggleAuth, etc.) remain unchanged
-
-function next(n) { showStep(n); }
-function prev(n) { showStep(n); }
-function showWifiConfirmModal() { document.getElementById('wifi-confirm-modal').style.display = 'flex'; }
-function closeWifiConfirmModal() { document.getElementById('wifi-confirm-modal').style.display = 'none'; }
-function confirmWifiSave() { closeWifiConfirmModal(); save_wifi(); }
-function toggleAuth() { /* unchanged */ }
-function showStatus(message, className = 'status', timeout = 4000) { /* unchanged */ }
-
-// Reboot function (unchanged)
+let statusHideTimeout = null;
+function showStatus(message, className = 'status', timeout = 4000) {
+    const status = document.getElementById('status');
+    status.textContent = message;
+    status.className = className;
+    status.style.display = 'block';
+    if (statusHideTimeout) clearTimeout(statusHideTimeout);
+    statusHideTimeout = setTimeout(() => {
+        status.style.display = 'none';
+        status.textContent = '';
+    }, timeout);
+}
+async function save_hostname() {
+    showStatus('Saving hostname...', 'status', 10000);
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    try {
+        const result = await fetch('/api/set-hostname', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({hostname: document.getElementById('hostname').value.trim()})
+        });
+        const data = await result.json();
+        if (data.status) {
+            showStatus('Hostname saved!', 'status success');
+        } else {
+            showStatus(data.message || 'Failed to save hostname.', 'status error');
+        }
+    } catch(e) {
+        showStatus('Error saving hostname.', 'status error');
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+}
+async function save_mqtt_server() {
+    showStatus('Saving MQTT server...', 'status', 10000);
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    try {
+        const result = await fetch('/api/save-mqtt-server', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mqtt_server: document.getElementById('mqtt_server').value.trim()})
+        });
+        const data = await result.json();
+        if (data.status) {
+            showStatus('MQTT server saved!', 'status success');
+        } else {
+            showStatus(data.message || 'Failed to save mqtt server.', 'status error');
+        }
+    } catch(e) {
+        showStatus('Error saving mqtt server.', 'status error');
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+}
+async function save_mqtt_credentials() {
+    showStatus('Saving MQTT credentials...', 'status', 10000);
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    try {
+        if (document.getElementById('mqtt_auth').value === 'cert') {
+            const certFile = document.getElementById('cert_file').files[0];
+            if (!certFile) {
+                showStatus('Please select a certificate file.', 'status error');
+                document.getElementById('welcome-spinner').style.display = 'none';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('cert_file', certFile);
+            const certResult = await fetch('/api/set-mqtt-cert', {
+                method: 'POST',
+                body: formData
+            });
+            const certData = await certResult.json();
+            if (certData.status) {
+                showStatus('Certificate uploaded successfully!', 'status success');
+            } else {
+                showStatus(certData.message || 'Failed to upload certificate.', 'status error');
+            }
+        }
+        else {
+            const result = await fetch('/api/set-mqtt-credentials', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    mqtt_username: document.getElementById('mqtt_user').value.trim(),
+                    mqtt_password: document.getElementById('mqtt_pass').value.trim()
+                })
+            });
+            const data = await result.json();
+            if (data.status) {
+                showStatus('MQTT credentials saved!', 'status success');
+            } else {
+                showStatus(data.message || 'Failed to save credentials.', 'status error');
+            }
+        }
+    } catch(e) {
+        showStatus('Error saving MQTT settings.', 'status error');
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+}
+async function save_main_url() {
+    showStatus('Saving main URL...', 'status success');
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    try {
+        const result = await fetch('/api/set-main-url', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({main_url: document.getElementById('main_url').value.trim()})
+        });
+        const data = await result.json();
+        if (data.status) {
+            showStatus('Main URL saved!', 'status success');
+        } else {
+            showStatus(data.message || 'Failed to save main URL.', 'status error');
+        }
+    } catch(e) {
+        showStatus('Error occurred. Check console or backend.', 'status error');
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+}
+async function reload_wifi() {
+    document.getElementById('wifi-save-btn').disabled = true;
+    document.getElementById('wifi-reload-btn').disabled = true;
+    document.getElementById('wifi-continue-btn').disabled = true;
+    const statusValue = document.getElementById('wifi-status-value');
+    statusValue.textContent = 'Reloading...';
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    statusValue.style.color = '#03a9f4';
+    try {
+        await fetch('/api/restart-wifi', {method: 'POST'});
+        await checkWifiConfigured();
+    } catch(e) {
+        statusValue.textContent = 'Error reloading WiFi.';
+        statusValue.style.color = '#b71c1c';
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+    document.getElementById('wifi-save-btn').disabled = false;
+    document.getElementById('wifi-reload-btn').disabled = false;
+    document.getElementById('wifi-continue-btn').disabled = false;
+}
+async function save_wifi() {
+    document.getElementById('wifi-save-btn').disabled = true;
+    document.getElementById('wifi-reload-btn').disabled = true;
+    document.getElementById('wifi-continue-btn').disabled = true;
+    showStatus('Saving WiFi settings...', 'status success');
+    document.getElementById('welcome-spinner').style.display = 'flex';
+    const password = document.getElementById('wifi_pass').value;
+    if (password) {
+        const isHex = /^[A-Fa-f0-9]{64}$/.test(password);
+        const isAscii = /^[\x20-\x7E]{8,63}$/.test(password);
+        if (!(isHex || isAscii)) {
+            showStatus('WiFi password must be 8-63 ASCII characters or 64 hex digits.', 'status error');
+            document.getElementById('welcome-spinner').style.display = 'none';
+            document.getElementById('wifi-save-btn').disabled = false;
+            document.getElementById('wifi-reload-btn').disabled = false;
+            document.getElementById('wifi-continue-btn').disabled = false;
+            return;
+        }
+    }
+    try {
+        const ssid = document.getElementById('ssid').value.trim();
+        const res = await fetch('/api/save-wifi', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ssid: ssid, password: password})
+        });
+        const saveResult = await res.json();
+        if (saveResult.status) {
+            showStatus('WiFi settings update completed.', 'status success');
+            await checkWifiConfigured();
+        } else {
+            showStatus(saveResult.message || 'WiFi save failed.', 'status error');
+        }
+    } catch(e) {
+        showStatus('Error occurred. Check console or backend.', 'status error');
+    }
+    document.getElementById('welcome-spinner').style.display = 'none';
+    document.getElementById('wifi-save-btn').disabled = false;
+    document.getElementById('wifi-reload-btn').disabled = false;
+    document.getElementById('wifi-continue-btn').disabled = false;
+}
 function reboot() {
     fetch('/api/reboot', {method: 'GET'});
     showStatus('Rebooting...', 'status success', 10000);
 }
-
 // Start
 window.onload = function() {
     showStep(1);
     let done = false;
     let minTimePassed = false;
     let wifiReady = false;
-
     document.getElementById('welcome-spinner').style.display = 'flex';
-
     function tryFinishWelcome() {
         if (done) return;
         if (minTimePassed && wifiReady) {
@@ -342,10 +875,17 @@ window.onload = function() {
             showStep(2);
         }
     }
-
-    checkWifiConfigured().then(() => { wifiReady = true; tryFinishWelcome(); }).catch(() => { wifiReady = true; tryFinishWelcome(); });
-
-    setTimeout(() => { minTimePassed = true; tryFinishWelcome(); }, 5000);
+    checkWifiConfigured().then(() => {
+        wifiReady = true;
+        tryFinishWelcome();
+    }).catch(() => {
+        wifiReady = true;
+        tryFinishWelcome();
+    });
+    setTimeout(() => {
+        minTimePassed = true;
+        tryFinishWelcome();
+    }, 5000);
     setTimeout(() => {
         if (!done) {
             done = true;
