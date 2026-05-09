@@ -12,7 +12,7 @@ The files are served on /var/www/html which is the location for the internal web
 
 ## Files content
 
-### app.py
+### /api/app.py
 
 The services are executed with "flask". The file app.py contains the interfaces with the system to be acessed via /api/[command]
 Example: /api/reboot will execute a reboot of the HAUI.
@@ -23,4 +23,4 @@ The html file that is shown once you access http://[your ip or hostname]/control
 
 ### /haui-wizard
 
-The html file that is shown once you access http://[your ip or hostname]/haui-wizard 
+The html file that is shown once you access http://[your ip or hostname]/haui-wizard
