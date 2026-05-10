@@ -9,6 +9,129 @@ import shutil
 app = Flask(__name__)
 
 env_path = "/home/haui/fpos_mqtt_ha/.env"
+
+@app.route('/api/update-fpos-script', methods=['POST'])
+def update_fpos_script():
+    try:
+        data = request.get_json(silent=True) or {}
+        new_content = (data.get('content') or '').strip()
+
+        if not new_content:
+            return jsonify({'status': False, 'message': 'No script content provided'}), 400
+
+        script_path = '/home/haui/fpos_mqtt_ha/fpos_mqtt_ha.py'
+        backup_path = script_path + '.bak'
+
+        # 1. Backup
+        try:
+            shutil.copy2(script_path, backup_path)
+        except Exception as e:
+            print(f"Backup warning: {e}")
+
+        # 2. Write using sudo tee + stdin (no shell quoting, works with strict permissions)
+        import subprocess
+        proc = subprocess.run(
+            ['sudo', 'tee', script_path],
+            input=new_content.encode('utf-8'),
+            capture_output=True
+        )
+        if proc.returncode != 0:
+            return jsonify({
+                'status': False,
+                'message': f'sudo tee failed: {proc.stderr.decode(errors="ignore")}'
+            }), 500
+
+        # 3. Fix permissions
+        run_command(f"sudo chmod 755 {script_path}")
+
+        # 4. Restart service
+        restart_result = run_command("sudo systemctl restart backlight.service")
+
+        if restart_result['success']:
+            return jsonify({
+                'status': True,
+                'message': 'fpos_mqtt_ha.py updated successfully and service restarted.',
+                'backup': backup_path
+            })
+        else:
+            return jsonify({
+                'status': False,
+                'message': 'Script updated but restart failed',
+                'stderr': restart_result.get('stderr', ''),
+                'backup': backup_path
+            }), 500
+
+    except Exception as e:
+        return jsonify({'status': False, 'message': str(e)}), 500
+
+@app.route('/api/update-controls-index', methods=['POST'])
+def update_controls_index():
+    """
+    Update /var/www/html/controls/index.html
+    Uses sudo for file operations (requires sudoers rule below).
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        new_content = (data.get('content') or '').strip()
+
+        if not new_content:
+            return jsonify({'status': False, 'message': 'No content provided'}), 400
+
+        target_path = '/var/www/html/controls/index.html'
+        backup_path = target_path + '.bak'
+        temp_path = '/tmp/controls_index_update.html'
+
+        # Write to temp (no sudo needed)
+        with open(temp_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+
+        # Backup + replace using sudo -n (non-interactive, no password prompt)
+        run_command(f"sudo -n cp {target_path} {backup_path}")
+        copy_result = run_command(f"sudo -n cp {temp_path} {target_path}")
+        
+        if not copy_result['success']:
+            return jsonify({
+                'status': False,
+                'message': f'Failed to write file. Make sure sudoers allows haui to cp to /var/www/html/controls/'
+            }), 500
+
+        run_command(f"sudo -n chown www-data:www-data {target_path}")
+        run_command(f"sudo -n chmod 644 {target_path}")
+        run_command(f"sudo -n rm -f {temp_path}")
+
+        return jsonify({
+            'status': True,
+            'message': 'controls/index.html updated successfully. Reload web server if needed (sudo systemctl reload nginx).',
+            'backup': backup_path
+        })
+
+    except Exception as e:
+        return jsonify({'status': False, 'message': str(e)}), 500
+
+
+@app.route('/api/update-app-py', methods=['POST'])
+def update_app_py():
+    try:
+        data = request.get_json(silent=True) or {}
+        content = (data.get('content') or '').strip()
+
+        if not content:
+            return jsonify({'status': False, 'message': 'No content provided'}), 400
+
+        target = '/var/www/html/api/app.py'
+
+        import subprocess
+        write = subprocess.run(['sudo', 'tee', target], input=content.encode(), capture_output=True)
+        if write.returncode != 0:
+            return jsonify({'status': False, 'message': 'Write failed'}), 500
+
+        return jsonify({
+            'status': True,
+            'message': 'app.py updated successfully. Click "Restart Flask" button below to apply changes.'
+        })
+
+    except Exception as e:
+        return jsonify({'status': False, 'message': 'Error: ' + str(e)}), 500
     
 @app.route('/api/scan-wifi', methods=['GET'])
 def scan_wifi():
@@ -213,8 +336,8 @@ def set_hostname():
         debug_log = ["=== Hostname Change Debug ==="]
         debug_log.append(f"Target hostname: {new_hostname}")
 
-        # 1. First, temporarily add the new hostname to /etc/hosts to avoid sudo resolution error
-        debug_log.append("Temporarily updating /etc/hosts to prevent sudo resolution error...")
+        # 1. Temporarily update /etc/hosts
+        debug_log.append("Temporarily updating /etc/hosts...")
         current_hosts = ""
         try:
             with open('/etc/hosts', 'r') as f:
@@ -222,22 +345,68 @@ def set_hostname():
         except:
             pass
 
-        # Add new hostname alongside old one
         temp_hosts = current_hosts.strip() + f"\n127.0.1.1   {new_hostname}\n"
         run_command(f"echo '{temp_hosts}' | sudo tee /etc/hosts > /dev/null")
 
-        # 2. Now safely set the hostname with hostnamectl
+        # 2. Set system hostname
         debug_log.append("Setting hostname with hostnamectl...")
         result = run_command(f"sudo hostnamectl set-hostname {new_hostname}")
         if not result['success']:
             debug_log.append(f"hostnamectl failed: {result.get('stderr', '')}")
-            return jsonify({
-                'status': False,
-                'message': 'Failed to set hostname with hostnamectl',
-                'debug': '\n'.join(debug_log)
-            }), 500
 
-        # 3. Final clean /etc/hosts (remove old hostname if present)
+        # 3. Update Avahi configuration file
+        debug_log.append("Updating /etc/avahi/avahi-daemon.conf...")
+        avahi_conf_path = "/etc/avahi/avahi-daemon.conf"
+        
+        try:
+            # Read current config
+            with open(avahi_conf_path, 'r') as f:
+                lines = f.readlines()
+            
+            # Update or add host-name line under [server] section
+            updated = False
+            in_server_section = False
+            
+            for i, line in enumerate(lines):
+                stripped = line.strip()
+                
+                if stripped.startswith('[') and stripped.lower() == '[server]':
+                    in_server_section = True
+                elif stripped.startswith('['):
+                    in_server_section = False
+                
+                if in_server_section and stripped.startswith('host-name='):
+                    lines[i] = f"host-name={new_hostname}\n"
+                    updated = True
+                    break
+            
+            # If no host-name line was found, add it under [server]
+            if not updated:
+                for i, line in enumerate(lines):
+                    if line.strip().lower() == '[server]':
+                        lines.insert(i + 1, f"host-name={new_hostname}\n")
+                        updated = True
+                        break
+                # If [server] section doesn't exist, append it
+                if not updated:
+                    lines.append("\n[server]\n")
+                    lines.append(f"host-name={new_hostname}\n")
+            
+            # Write back the updated config
+            temp_content = ''.join(lines)
+            run_command(f"echo '{temp_content}' | sudo tee {avahi_conf_path} > /dev/null")
+            
+            debug_log.append(f"Avahi config updated successfully with host-name={new_hostname}")
+            
+        except Exception as avahi_err:
+            debug_log.append(f"Failed to update avahi-daemon.conf: {str(avahi_err)}")
+
+        # 4. Restart Avahi daemon to apply new hostname
+        debug_log.append("Restarting Avahi daemon...")
+        restart_result = run_command("sudo systemctl restart avahi-daemon")
+        debug_log.append(f"Avahi restart: success={restart_result['success']}")
+
+        # 5. Final clean /etc/hosts
         debug_log.append("Writing final clean /etc/hosts...")
         final_hosts = f"""127.0.0.1   localhost
 ::1         localhost ip6-localhost ip6-loopback
@@ -247,16 +416,16 @@ ff02::2     ip6-allrouters
 """
         run_command(f"echo '{final_hosts}' | sudo tee /etc/hosts > /dev/null")
 
-        # 4. Clear Chromium locks (prevents stuck logo)
+        # 6. Clear Chromium locks
         debug_log.append("Clearing Chromium profile locks...")
-        run_command("rm -rf /home/haui/.config/chromium/Singleton*")
-        run_command("rm -f /home/haui/.config/chromium/Default/.org.chromium.Chromium.*")
+        run_command("sudo rm -rf /home/haui/.config/chromium/Singleton*")
+        run_command("sudo rm -f /home/haui/.config/chromium/Default/.org.chromium.Chromium.*")
 
-        debug_log.append("Hostname change completed successfully")
+        debug_log.append("Hostname change + Avahi update completed successfully")
 
         return jsonify({
             'status': True,
-            'message': f'Hostname successfully changed to "{new_hostname}". A reboot is required.',
+            'message': f'Hostname successfully changed to "{new_hostname}". Avahi configuration updated and restarted.',
             'debug': '\n'.join(debug_log)
         })
 
@@ -366,10 +535,11 @@ BROKER_USERNAME=user
 BROKER_PASSWORD=pass
 BROKER_PORT={port}
 DISPLAY_NAME=10-0045
-DIMMING_TO_OFF_SECONDS='11'
-DIMMING_PERCENT='19'
+DIMMING_TO_OFF_SECONDS='600'
+DIMMING_PERCENT='3'
 LAST_TIMEOUT_SET='60'
 DISPLAY_DEVICE_NAME=ft5x06
+SAVED_BRIGHTNESS='100'
 """
 
         # write the .env with the data required.
@@ -408,10 +578,11 @@ BROKER_USERNAME={mqtt_username}
 BROKER_PASSWORD={mqtt_password}
 BROKER_PORT={port}
 DISPLAY_NAME=10-0045
-DIMMING_TO_OFF_SECONDS='11'
-DIMMING_PERCENT='19'
+DIMMING_TO_OFF_SECONDS='600'
+DIMMING_PERCENT='3'
 LAST_TIMEOUT_SET='60'
 DISPLAY_DEVICE_NAME=ft5x06
+SAVED_BRIGHTNESS='100'
 """
 
         # write the .env with the data required.
