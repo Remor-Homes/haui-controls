@@ -1,4 +1,12 @@
-# HAUI Controls and Wizard
+# HAUI
+
+HAUI is a Home Automation User Interface initially designed for Home assistant community but suitable for any home automation system. It's based on a 7in capacitive touch display and a Raspberry Pi using a modified version of FullPageOS kiosk OS.
+
+<img src="https://haui.remorh.com/haui-07/marketing_002.jpg" alt="HAUI_01" style="width:300px;"/>
+
+Find more information about [HAUI here]([url](https://haui.remorh.com/haui-07/)).
+
+# This Repo: HAUI Controls and Wizard
 
 This repository contains the two pages of the Home Assistant User Interface to support the setup wizard (/haui-wizard) and adjustments after installed (/controls).
 
